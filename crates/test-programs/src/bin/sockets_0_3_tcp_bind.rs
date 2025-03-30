@@ -4,6 +4,7 @@ use test_programs::p3::wasi::sockets::types::{
     ErrorCode, IpAddress, IpAddressFamily, IpSocketAddress, TcpSocket,
 };
 use test_programs::p3::wit_stream;
+use std::io::ErrorKind;
 
 struct Component;
 
@@ -298,6 +299,14 @@ async fn test_tcp_bind_already_error() {
     assert_eq!(listener.bind(bind_address), Err(ErrorCode::InvalidState));
 }
 
+/// Attempting to bind to a port that requires root access
+/// results in an EACCES error.
+fn test_tcp_bind_eaccess() {
+    let ip = IpAddress::new_loopback(IpAddressFamily::Ipv4);
+    let bind_address = IpSocketAddress::new(ip, 80);
+    let bind_result = (TcpSocket::new(IpAddressFamily::Ipv4)).bind(bind_address);
+    assert_eq!(bind_result, Err(ErrorCode::AccessDenied));
+}
 
 impl test_programs::p3::exports::wasi::cli::run::Guest for Component {
     async fn run() -> Result<(), ()> {
@@ -346,6 +355,8 @@ impl test_programs::p3::exports::wasi::cli::run::Guest for Component {
         // test_tcp_bind_already_error().await;
 
         test_tcp_bind_already_closed().await;
+
+        test_tcp_bind_eaccess();
 
         Ok(())
     }
