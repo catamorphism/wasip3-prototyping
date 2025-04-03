@@ -140,6 +140,7 @@ fn build_command<P: AsRef<Path>>(module: P, extra_flags: &[&str], spec: &Spec) -
 
     // Add arguments.
     cmd.args(["run", "-Ccache=n"]);
+    cmd.args(["-S", "allow-ip-name-lookup=y"]);
     cmd.args(extra_flags);
     if let Some(dirs) = &spec.dirs {
         for dir in dirs {
